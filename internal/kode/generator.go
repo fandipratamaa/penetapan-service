@@ -15,12 +15,12 @@ func KodeIndikatorSasaranOpd(indikatorSasaranId string) string {
 	if strings.TrimSpace(indikatorSasaranId) == "" {
 		return ""
 	}
-	return fmt.Sprintf("IND-SAS-%s", indikatorSasaranId)
+	return fmt.Sprintf("IND-%s", indikatorSasaranId)
 }
 
 func KodeTargetSasaranOpd(targetSasaranId string) string {
 	if strings.TrimSpace(targetSasaranId) == "" {
 		return ""
 	}
-	return fmt.Sprintf("TGT-SAS-%s", targetSasaranId)
+	return fmt.Sprintf("TGT-%s", targetSasaranId)
 }

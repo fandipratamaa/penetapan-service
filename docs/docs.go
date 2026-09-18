@@ -1421,7 +1421,7 @@ const docTemplate = `{
                 },
                 "kode_indikator_sasaran_opd": {
                     "type": "string",
-                    "example": "IND-SAS-1"
+                    "example": "IND-1"
                 },
                 "nama_indikator_pk": {
                     "type": "string",
@@ -2313,7 +2313,7 @@ const docTemplate = `{
                 },
                 "kode_target_sasaran_opd": {
                     "type": "string",
-                    "example": "TGT-SAS-1"
+                    "example": "TGT-1"
                 },
                 "satuan": {
                     "type": "string",
@@ -2603,6 +2603,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Service snapshot penetapan tujuan, sasaran, renja, rekin untuk pemda, opd, dan individu",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
