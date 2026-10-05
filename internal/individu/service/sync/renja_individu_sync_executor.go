@@ -13,6 +13,7 @@ import (
 	"github.com/bappeda-dev-team/penetapan-service/internal/individu/domain"
 	"github.com/bappeda-dev-team/penetapan-service/internal/individu/repository"
 	"github.com/bappeda-dev-team/penetapan-service/internal/individu/web"
+	"github.com/bappeda-dev-team/penetapan-service/internal/kode"
 )
 
 type RenjaIndividuSyncExecutor struct {
@@ -77,12 +78,28 @@ func (ex *RenjaIndividuSyncExecutor) Sync(
 		return web.SyncPenetapanSummary{}, err
 	}
 
+	kodeSubkegiatans := make([]string, 0, len(renjaIndividus))
+	for _, renja := range renjaIndividus {
+		if strings.TrimSpace(renja.KodeSubkegiatan) != "" {
+			kodeSubkegiatans = append(kodeSubkegiatans, renja.KodeSubkegiatan)
+		}
+	}
+
+	renjaOpdRefs, err := ex.Repo.ResolveRenjaOpdIds(
+		ctx, tx, snapshot.KodeOpd, snapshot.Tahun, kodeSubkegiatans,
+	)
+	if err != nil {
+		return web.SyncPenetapanSummary{}, err
+	}
+
 	// SAVE RENJA INDIVIDU
 	summary := SummaryCounter{}
 	for _, renja := range renjaIndividus {
 		kodePaguProgram := fmt.Sprintf("PAGU-PRG-%s-%d-%s", renja.KodeProgram, snapshot.Tahun, "programs")
 		kodePaguKegiatan := fmt.Sprintf("PAGU-KEG-%s-%d-%s", renja.KodeKegiatan, snapshot.Tahun, "kegiatans")
 		kodePaguSubkegiatan := fmt.Sprintf("PAGU-SUBKEG-%s-%d-%s", renja.KodeSubkegiatan, snapshot.Tahun, "subkegiatans")
+
+		ref := renjaOpdRefs[renja.KodeSubkegiatan]
 		renjaIndividu := domain.RenjaIndividu{
 			PegawaiId:  snapshot.PegawaiId,
 			KodeOpd:    snapshot.KodeOpd,
@@ -109,6 +126,10 @@ func (ex *RenjaIndividuSyncExecutor) Sync(
 
 			PenetapanIndividuId: snapshotId,
 			CreatedBy:           &currentUser,
+
+			KodeRenjaOpdProgram:     kode.KodeRenjaOpd(ref.IdProgram),
+			KodeRenjaOpdKegiatan:    kode.KodeRenjaOpd(ref.IdKegiatan),
+			KodeRenjaOpdSubkegiatan: kode.KodeRenjaOpd(ref.IdSubkegiatan),
 		}
 		idRenja, err := ex.Repo.SaveRenjaIndividu(ctx, tx, renjaIndividu)
 		if err != nil {
@@ -120,7 +141,9 @@ func (ex *RenjaIndividuSyncExecutor) Sync(
 			ctx,
 			tx,
 			idRenja,
-			"PROGRAM",
+			repository.TierRenjaProgram,
+			ref.IdProgram,
+			snapshot.Tahun,
 			renja.IndikatorPrograms,
 			&summary,
 		); err != nil {
@@ -131,7 +154,9 @@ func (ex *RenjaIndividuSyncExecutor) Sync(
 			ctx,
 			tx,
 			idRenja,
-			"KEGIATAN",
+			repository.TierRenjaKegiatan,
+			ref.IdKegiatan,
+			snapshot.Tahun,
 			renja.IndikatorKegiatans,
 			&summary,
 		); err != nil {
@@ -142,7 +167,9 @@ func (ex *RenjaIndividuSyncExecutor) Sync(
 			ctx,
 			tx,
 			idRenja,
-			"SUB-KEGIATAN",
+			repository.TierRenjaSubkegiatan,
+			ref.IdSubkegiatan,
+			snapshot.Tahun,
 			renja.IndikatorSubkegiatans,
 			&summary,
 		); err != nil {
@@ -194,17 +221,35 @@ func (ex *RenjaIndividuSyncExecutor) saveIndikatorRenja(
 	tx *sql.Tx,
 	renjaID int64,
 	jenis string,
+	parentOpdID int64,
+	tahun int,
 	indikators []client.IndikatorRenja,
 	summary *SummaryCounter,
 ) error {
+	indikatorOpdRef, err := ex.Repo.ResolveIndikatorRenjaOpd(
+		ctx, tx, jenis, parentOpdID, tahun,
+	)
+	if err != nil {
+		return err
+	}
+
 	for _, ind := range indikators {
 		kodeIndikator := fmt.Sprintf("IND-%s", ind.Id)
+
+		// Kode didahulukan atas nama: nama indikator di api_ekak ("INDIKATOR
+		// PROGRAM A") dan di cascade renja OPD sama sekali berbeda, padahal
+		// kode_indikator-nya identik setelah prefix IND- dibuang.
+		indikatorOpdID, _ := indikatorOpdRef.Lookup(ind.Id, ind.Indikator)
+
+		kodeIndikatorOpd := kode.KodeIndikatorRenjaOpd(indikatorOpdID)
+
 		indikator := domain.IndikatorRenjaIndividu{
 			RenjaIndividuID: renjaID,
 			JenisIndikator:  jenis,
 			// WARNING KODE INDIKATOR
-			KodeIndikatorRenja: kodeIndikator,
-			Indikator:          ind.Indikator,
+			KodeIndikatorRenja:    kodeIndikator,
+			Indikator:             ind.Indikator,
+			KodeIndikatorRenjaOpd: kodeIndikatorOpd,
 		}
 
 		idIndikator, err := ex.Repo.SaveIndikatorRenjaIndividu(ctx, tx, indikator)
@@ -213,6 +258,17 @@ func (ex *RenjaIndividuSyncExecutor) saveIndikatorRenja(
 		}
 
 		summary.AddIndikatorRenjaIndividu(1)
+
+		targetOpdIDs := map[int]int64{}
+
+		if indikatorOpdID > 0 {
+			targetOpdIDs, err = ex.Repo.ResolveTargetRenjaOpd(
+				ctx, tx, jenis, indikatorOpdID,
+			)
+			if err != nil {
+				return err
+			}
+		}
 
 		for _, target := range ind.Targets {
 			kodeTarget := fmt.Sprintf("TGT-%s", target.Id)
@@ -225,10 +281,16 @@ func (ex *RenjaIndividuSyncExecutor) saveIndikatorRenja(
 				)
 			}
 
+			var kodeTargetOpd string
+			if opdID, ok := targetOpdIDs[target.Tahun]; ok {
+				kodeTargetOpd = kode.KodeTargetRenjaOpd(opdID)
+			}
+
 			targetRenja := domain.TargetRenjaIndividu{
 				IndikatorRenjaIndividuID: idIndikator,
 				JenisTarget:              jenis,
 				KodeTargetRenja:          kodeTarget,
+				KodeTargetRenjaOpd:       kodeTargetOpd,
 				Target:                   targetFloat,
 				Satuan:                   target.Satuan,
 				Tahun:                    target.Tahun,

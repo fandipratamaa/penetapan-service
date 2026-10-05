@@ -464,19 +464,21 @@ func (s *PenetapanIndividuService) FindRenjaIndividu(
 
 		for _, t := range targetMap[ind.ID] {
 			targets = append(targets, web.TargetRenja{
-				Id:         t.ID,
-				KodeTarget: t.KodeTargetRenja,
-				Target:     t.Target,
-				Satuan:     t.Satuan,
-				Tahun:      t.Tahun,
+				Id:                 t.ID,
+				KodeTarget:         t.KodeTargetRenja,
+				KodeTargetRenjaOpd: t.KodeTargetRenjaOpd,
+				Target:             t.Target,
+				Satuan:             t.Satuan,
+				Tahun:              t.Tahun,
 			})
 		}
 
 		dto := web.IndikatorRenja{
-			Id:            ind.ID,
-			KodeIndikator: ind.KodeIndikatorRenja,
-			Indikator:     ind.Indikator,
-			Targets:       targets,
+			Id:                    ind.ID,
+			KodeIndikator:         ind.KodeIndikatorRenja,
+			KodeIndikatorRenjaOpd: ind.KodeIndikatorRenjaOpd,
+			Indikator:             ind.Indikator,
+			Targets:               targets,
 		}
 
 		group := indikatorMap[ind.RenjaIndividuID]
@@ -508,23 +510,26 @@ func (s *PenetapanIndividuService) FindRenjaIndividu(
 			IdPegawai:   renja.PegawaiId,
 			NamaPegawai: renja.NamaPemilikPk,
 
-			KodeProgram:       renja.KodeProgram,
-			NamaProgram:       renja.NamaProgram,
-			KodePaguProgram:   renja.KodePaguProgram,
-			PaguProgram:       renja.PaguProgram,
-			IndikatorPrograms: group.Programs,
+			KodeProgram:         renja.KodeProgram,
+			NamaProgram:         renja.NamaProgram,
+			KodePaguProgram:     renja.KodePaguProgram,
+			PaguProgram:         renja.PaguProgram,
+			IndikatorPrograms:   group.Programs,
+			KodeRenjaOpdProgram: renja.KodeRenjaOpdProgram,
 
-			KodeKegiatan:       renja.KodeKegiatan,
-			NamaKegiatan:       renja.NamaKegiatan,
-			KodePaguKegiatan:   renja.KodePaguKegiatan,
-			PaguKegiatan:       renja.PaguKegiatan,
-			IndikatorKegiatans: group.Kegiatans,
+			KodeKegiatan:         renja.KodeKegiatan,
+			NamaKegiatan:         renja.NamaKegiatan,
+			KodePaguKegiatan:     renja.KodePaguKegiatan,
+			PaguKegiatan:         renja.PaguKegiatan,
+			IndikatorKegiatans:   group.Kegiatans,
+			KodeRenjaOpdKegiatan: renja.KodeRenjaOpdKegiatan,
 
-			KodeSubkegiatan:       renja.KodeSubkegiatan,
-			NamaSubkegiatan:       renja.NamaSubkegiatan,
-			KodePaguSubkegiatan:   renja.KodePaguSubkegiatan,
-			PaguSubkegiatan:       renja.PaguSubkegiatan,
-			IndikatorSubkegiatans: group.Subkegiatans,
+			KodeSubkegiatan:         renja.KodeSubkegiatan,
+			NamaSubkegiatan:         renja.NamaSubkegiatan,
+			KodePaguSubkegiatan:     renja.KodePaguSubkegiatan,
+			PaguSubkegiatan:         renja.PaguSubkegiatan,
+			IndikatorSubkegiatans:   group.Subkegiatans,
+			KodeRenjaOpdSubkegiatan: renja.KodeRenjaOpdSubkegiatan,
 		})
 	}
 

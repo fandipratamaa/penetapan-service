@@ -35,13 +35,17 @@ func (repo *PenetapanIndividuRepository) SaveRenjaIndividu(
 			nama_subkegiatan,
 			kode_pagu_subkegiatan,
 			pagu_subkegiatan,
+			kode_renja_opd_program,
+			kode_renja_opd_kegiatan,
+			kode_renja_opd_subkegiatan,
 			created_by
 		) VALUES (
 			$1, $2, $3, $4, $5,
 			$6, $7, $8, $9, $10,
 			$11, $12, $13, $14,
 			$15, $16, $17, $18,
-			$19, $20
+			$19, $20, $21, $22,
+			$23
 		)
 		RETURNING id
 	`
@@ -72,6 +76,9 @@ func (repo *PenetapanIndividuRepository) SaveRenjaIndividu(
 		req.NamaSubkegiatan,
 		req.KodePaguSubkegiatan,
 		req.PaguSubkegiatan,
+		req.KodeRenjaOpdProgram,
+		req.KodeRenjaOpdKegiatan,
+		req.KodeRenjaOpdSubkegiatan,
 		req.CreatedBy,
 	).Scan(&id)
 
@@ -92,9 +99,10 @@ func (repo *PenetapanIndividuRepository) SaveIndikatorRenjaIndividu(
 			renja_individu_id,
 			jenis_indikator,
 			kode_indikator_renja,
-			indikator
+			indikator,
+			kode_indikator_renja_opd
 		) VALUES (
-			$1, $2, $3, $4
+			$1, $2, $3, $4, $5
 		)
 		RETURNING id
 	`
@@ -108,6 +116,7 @@ func (repo *PenetapanIndividuRepository) SaveIndikatorRenjaIndividu(
 		req.JenisIndikator,
 		req.KodeIndikatorRenja,
 		req.Indikator,
+		req.KodeIndikatorRenjaOpd,
 	).Scan(&id)
 
 	if err != nil {
@@ -129,9 +138,10 @@ func (repo *PenetapanIndividuRepository) SaveTargetRenjaIndividu(
 			kode_target_renja,
 			target,
 			satuan,
-			tahun
+			tahun,
+			kode_target_renja_opd
 		) VALUES (
-			$1, $2, $3, $4, $5, $6
+			$1, $2, $3, $4, $5, $6, $7
 		)
 		RETURNING id
 	`
@@ -147,6 +157,7 @@ func (repo *PenetapanIndividuRepository) SaveTargetRenjaIndividu(
 		req.Target,
 		req.Satuan,
 		req.Tahun,
+		req.KodeTargetRenjaOpd,
 	).Scan(&id)
 
 	if err != nil {
@@ -183,6 +194,9 @@ func (repo *PenetapanIndividuRepository) FindRenjaIndividu(
 			ri.nama_subkegiatan,
 			ri.kode_pagu_subkegiatan,
 			ri.pagu_subkegiatan,
+			ri.kode_renja_opd_program,
+			ri.kode_renja_opd_kegiatan,
+			ri.kode_renja_opd_subkegiatan,
 			ri.created_date,
 			ri.last_modified_date,
 			ri.created_by
@@ -237,6 +251,9 @@ func (repo *PenetapanIndividuRepository) FindRenjaIndividu(
 			&renja.NamaSubkegiatan,
 			&renja.KodePaguSubkegiatan,
 			&renja.PaguSubkegiatan,
+			&renja.KodeRenjaOpdProgram,
+			&renja.KodeRenjaOpdKegiatan,
+			&renja.KodeRenjaOpdSubkegiatan,
 			&renja.CreatedDate,
 			&renja.LastModifiedDate,
 			&renja.CreatedBy,
@@ -279,7 +296,8 @@ func (repo *PenetapanIndividuRepository) FindIndikatorRenjaByRenjaIds(
 			renja_individu_id,
 			jenis_indikator,
 			kode_indikator_renja,
-			indikator
+			indikator,
+			kode_indikator_renja_opd
 		FROM indikator_renja_individu
 		WHERE renja_individu_id IN (%s)
 		ORDER BY id
@@ -302,6 +320,7 @@ func (repo *PenetapanIndividuRepository) FindIndikatorRenjaByRenjaIds(
 			&item.JenisIndikator,
 			&item.KodeIndikatorRenja,
 			&item.Indikator,
+			&item.KodeIndikatorRenjaOpd,
 		)
 		if err != nil {
 			return nil, err
@@ -339,7 +358,8 @@ func (repo *PenetapanIndividuRepository) FindTargetRenjaByIndikatorIds(
 			kode_target_renja,
 			target,
 			satuan,
-			tahun
+			tahun,
+			kode_target_renja_opd
 		FROM target_renja_individu
 		WHERE indikator_renja_individu_id IN (%s)
 		ORDER BY tahun
@@ -364,6 +384,7 @@ func (repo *PenetapanIndividuRepository) FindTargetRenjaByIndikatorIds(
 			&item.Target,
 			&item.Satuan,
 			&item.Tahun,
+			&item.KodeTargetRenjaOpd,
 		)
 		if err != nil {
 			return nil, err

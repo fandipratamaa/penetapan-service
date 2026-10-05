@@ -34,18 +34,23 @@ type RenjaIndividu struct {
 	PaguSubkegiatan       int64
 	IndikatorSubkegiatans []IndikatorRenjaIndividu
 
+	KodeRenjaOpdProgram     string
+	KodeRenjaOpdKegiatan    string
+	KodeRenjaOpdSubkegiatan string
+
 	CreatedDate      time.Time
 	LastModifiedDate time.Time
 	CreatedBy        *string
 }
 
 type IndikatorRenjaIndividu struct {
-	ID                 int64
-	RenjaIndividuID    int64
-	JenisIndikator     string
-	KodeIndikatorRenja string
-	Indikator          string
-	Targets            []TargetRenjaIndividu
+	ID                    int64
+	RenjaIndividuID       int64
+	JenisIndikator        string
+	KodeIndikatorRenja    string
+	Indikator             string
+	KodeIndikatorRenjaOpd string
+	Targets               []TargetRenjaIndividu
 }
 
 type TargetRenjaIndividu struct {
@@ -53,6 +58,7 @@ type TargetRenjaIndividu struct {
 	IndikatorRenjaIndividuID int64
 	JenisTarget              string
 	KodeTargetRenja          string
+	KodeTargetRenjaOpd       string
 	Target                   float64
 	Satuan                   string
 	Tahun                    int
